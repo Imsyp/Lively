@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'home_screen.dart';
 import 'library_screen.dart';
@@ -104,17 +104,21 @@ class _AddSongDetailScreenState extends State<AddSongDetailScreen> {
         ),
       };
 
-      final prefs = await SharedPreferences.getInstance();
-      final clipsJson = prefs.getString('clips') ?? '[]';
-      final clips = jsonDecode(clipsJson) as List<dynamic>;
-      clips.add(clip);
-      await prefs.setString('clips', jsonEncode(clips));
+      final response = await http.post(
+        Uri.parse('http://localhost:3000/live/add'),  // 서버 주소
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(clip),
+      );
 
-      if (mounted) {
+      if (response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Song clip added successfully')),
+          const SnackBar(content: Text('Your Own Live added successfully')),
         );
         Navigator.pushNamed(context, '/library');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to add Live')),
+        );
       }
     }
   }

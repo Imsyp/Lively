@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../models/trending_item.dart';
 import 'library_screen.dart';
 import 'add_song_url.dart';
+import 'player_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,63 +14,131 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<Map<String, dynamic>> savedSongs = [];
+  List<Map<String, dynamic>> liveData = [];
+  List<TrendingItem> trendingItems = [];
+  final String apiKey = 'AIzaSyBtSOEGxr8cTLvtAIT2KzH_1K9Ws2mN_DQ'; // YouTube Data API 키를 입력하세요
+  int _selectedIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    _loadSavedSongs();
+    _fetchLiveData();
+    _fetchTrendingVideos();
   }
 
-  Future<void> _loadSavedSongs() async {
-    final prefs = await SharedPreferences.getInstance();
-    final clipsJson = prefs.getString('clips') ?? '[]';
-    setState(() {
-      savedSongs = List<Map<String, dynamic>>.from(jsonDecode(clipsJson));
-    });
+  Future<void> _fetchLiveData() async {
+    try {
+      final response = await http.get(Uri.parse('http://localhost:3000/live'));
+      print('API Response: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> responseData = jsonDecode(response.body);
+
+        setState(() {
+          liveData = responseData.map((item) {
+            return {
+              'id': item['id'].toString(),
+              'title': item['title'] ?? 'Unknown',
+              'singer': item['singer'] ?? 'Unknown',
+              'thumbnailUrl': item['thumbnailUrl'] ?? 'assets/placeholder.jpg',
+              'videoId': item['videoId'] ?? '',
+              'startTime': item['startTime'] ?? 0.0,
+              'endTime': item['endTime'] ?? 0.0,
+            };
+          }).toList();
+        });
+        
+        print('Processed Live Data: $liveData');
+      } else {
+        print('Failed to load live data: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching live data: $e');
+    }
   }
 
-  final List<TrendingItem> trendingItems = [
-    TrendingItem(title: 'JENNIE - Mantra (Official)', artist: 'JENNIE', rank: 1),
-    TrendingItem(title: "IU '바이, 썸머' (Bye summer)", artist: 'IU', rank: 2),
-    TrendingItem(title: 'Heavy Is The Crown (ft. Li)', artist: 'League of Legends', rank: 3),
-    TrendingItem(title: 'Heavy Is The Crown (ft. Li)', artist: 'League of Legends', rank: 4),
-    TrendingItem(title: 'Heavy Is The Crown (ft. Li)', artist: 'League of Legends', rank: 5),
-    TrendingItem(title: 'Heavy Is The Crown (ft. Li)', artist: 'League of Legends', rank: 6),
-    TrendingItem(title: 'Heavy Is The Crown (ft. Li)', artist: 'League of Legends', rank: 7),
-    TrendingItem(title: 'Heavy Is The Crown (ft. Li)', artist: 'League of Legends', rank: 8),
-    TrendingItem(title: 'Heavy Is The Crown (ft. Li)', artist: 'League of Legends', rank: 9),
-    TrendingItem(title: 'Heavy Is The Crown (ft. Li)', artist: 'League of Legends', rank: 10),
-  ];
+  Future<void> _fetchTrendingVideos() async {
+    try {
+      final response = await http.get(
+        Uri.parse(
+          'https://www.googleapis.com/youtube/v3/videos?'
+          'part=snippet,statistics&'
+          'chart=mostPopular&'
+          'videoCategoryId=10&'  // Music category
+          'regionCode=KR&'       // Korea region
+          'maxResults=10&'
+          'key=$apiKey'
+        ),
+      );
 
-  int _selectedIndex = 0;
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final List<dynamic> items = data['items'];
+        
+        setState(() {
+          trendingItems = List<TrendingItem>.from(items.asMap().entries.map((entry) {
+            final item = entry.value;
+            final snippet = item['snippet'];
+            final statistics = item['statistics'];
+            final titleParts = snippet['title'].toString().split(' - ');
+            final artist = titleParts.length > 1 ? titleParts[0] : 'Unknown Artist';
+            final title = titleParts.length > 1 ? titleParts[1] : snippet['title'];
+
+            return TrendingItem(
+              rank: entry.key + 1,
+              title: title,
+              artist: artist,
+              thumbnailUrl: snippet['thumbnails']['high']['url'],
+              videoId: item['id'],
+              viewCount: _formatViewCount(statistics['viewCount']),
+            );
+          }));
+        });
+      } else {
+        print('Failed to load trending videos: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching trending videos: $e');
+    }
+  }
+
+  String _formatViewCount(String viewCount) {
+    final count = int.parse(viewCount);
+    if (count > 1000000) {
+      return '${(count / 1000000).toStringAsFixed(1)}M views';
+    } else if (count > 1000) {
+      return '${(count / 1000).toStringAsFixed(1)}K views';
+    }
+    return '$count views';
+  }
 
   void _onNavItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    
     if (index == 2) {
-      // Library를 선택했을 때 애니메이션 없이 이동
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) => const LibraryScreen(),
-          transitionDuration: Duration.zero, // 애니메이션 없이 전환
+          transitionDuration: Duration.zero,
         ),
       );
     } else if (index == 0) {
-      // Home을 선택했을 때 애니메이션 없이 이동
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) => const HomeScreen(),
-          transitionDuration: Duration.zero, // 애니메이션 없이 전환
+          transitionDuration: Duration.zero,
         ),
       );
     } else {
-      // Explore 화면으로 전환
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) => const AddSongUrlScreen(),
-          transitionDuration: Duration.zero, // 애니메이션 없이 전환
+          transitionDuration: Duration.zero,
         ),
       );
     }
@@ -95,7 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(width: 10),
                     const Text(
                       'Hello, Sydev!',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white), // 흰색 텍스트
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                   ],
                 ),
@@ -110,11 +179,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: const TextField(
                     decoration: InputDecoration(
                       hintText: 'Search',
-                      prefixIcon: Icon(Icons.search, color: Colors.white), // 흰색 아이콘
+                      prefixIcon: Icon(Icons.search, color: Colors.white),
                       border: InputBorder.none,
-                      contentPadding:
-                          EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      hintStyle: TextStyle(color: Colors.white), // 흰색 힌트 텍스트
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      hintStyle: TextStyle(color: Colors.white),
                     ),
                   ),
                 ),
@@ -132,15 +200,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               SizedBox(height: 16),
-              if (savedSongs.isNotEmpty) ...[
+              if (liveData.isNotEmpty) ...[
                 SizedBox(
                   height: 162,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: savedSongs.length,
+                    itemCount: liveData.length,
                     itemBuilder: (context, index) {
-                      final song = savedSongs[index];
+                      final song = liveData[index];
                       return _buildSavedSongItem(song);
                     },
                   ),
@@ -182,7 +250,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onTap: _onNavItemTapped,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home, color: Colors.white), // 흰색 아이콘
+            icon: Icon(Icons.home, color: Colors.white),
             label: 'Home',
           ),
           BottomNavigationBarItem(
@@ -190,14 +258,13 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Add Song',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.library_music, color: Colors.white), // 흰색 아이콘
+            icon: Icon(Icons.library_music, color: Colors.white),
             label: 'Library',
           ),
         ],
       ),
     );
   }
-
 
   Widget _buildTrendingItem(TrendingItem item) {
     return Container(
@@ -230,9 +297,8 @@ class _HomeScreenState extends State<HomeScreen> {
               margin: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(4),
-                color: Colors.grey[800],
                 image: DecorationImage(
-                  image: AssetImage(item.imageUrl),
+                  image: NetworkImage(item.thumbnailUrl),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -246,25 +312,35 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: const TextStyle(
                       fontWeight: FontWeight.w500,
                       fontSize: 14,
-                      color: Colors.white, // 흰색 텍스트
+                      color: Colors.white,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    item.artist,
+                    '${item.artist} • ${item.viewCount}',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: Colors.grey[400],
                       fontSize: 12,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(
-              Icons.more_vert,
-              color: Colors.white, // 흰색 아이콘
+            IconButton(
+              icon: const Icon(Icons.add, color: Colors.white),
+              onPressed: () {
+                final url = 'https://youtube.com/watch?v=${item.videoId}';
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddSongUrlScreen(
+                      initialUrl: url,
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -273,44 +349,63 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSavedSongItem(Map<String, dynamic> song) {
-    return Container(
-      width: 120,
-      margin: const EdgeInsets.only(right: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              color: Colors.grey[800],
-              image: DecorationImage(
-                image: NetworkImage(song['thumbnailUrl']),
-                fit: BoxFit.cover,
+    return GestureDetector(
+      onTap: () {
+        print('Clicked song: $song');
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PlayerScreen(
+              liveId: song['id'],
+              thumbnailUrl: song['thumbnailUrl'],
+              title: song['title'],
+              singer: song['singer'],
+              videoId: song['videoId'],
+              startTime: song['startTime'],
+              endTime: song['endTime'],
+            ),
+          ),
+        );
+      },
+      child: Container(
+        width: 120,
+        margin: const EdgeInsets.only(right: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: Colors.grey[800],
+                image: DecorationImage(
+                  image: NetworkImage(song['thumbnailUrl']),
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
-          ),
-          SizedBox(height: 4),
-          Text(
-            song['title'],
-            style: TextStyle(
-              fontWeight: FontWeight.w500,
-              color: Colors.white,
+            SizedBox(height: 4),
+            Text(
+              song['title'],
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: Colors.white,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          Text(
-            song['singer'],
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 12,
+            Text(
+              song['singer'],
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

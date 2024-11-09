@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'home_screen.dart';
 import 'add_song_url.dart';
@@ -12,8 +12,8 @@ class LibraryScreen extends StatefulWidget {
 }
 
 class _LibraryScreenState extends State<LibraryScreen> {
-  bool isPlaylistsSelected = true;
-  List<Map<String, dynamic>> savedSongs = [];
+  bool isPlaylistsSelected = false;
+  List<Map<String, dynamic>> liveData = [];
 
   final List<Map<String, String>> recentlyPlayed = [
     {"title": "인디 플리", "tracks": "128 tracks", "imageUrl": "assets/placeholder.jpg"},
@@ -41,15 +41,29 @@ class _LibraryScreenState extends State<LibraryScreen> {
   @override
   void initState() {
     super.initState();
-    _loadSavedSongs();
+    _fetchLiveData(); // API 호출
   }
 
-  Future<void> _loadSavedSongs() async {
-    final prefs = await SharedPreferences.getInstance();
-    final clipsJson = prefs.getString('clips') ?? '[]';
-    setState(() {
-      savedSongs = List<Map<String, dynamic>>.from(jsonDecode(clipsJson));
-    });
+  Future<void> _fetchLiveData() async {
+    final response = await http.get(Uri.parse('http://localhost:3000/live'));
+
+    if (response.statusCode == 200) {
+      // 성공적으로 데이터를 가져왔을 때
+      final List<dynamic> responseData = jsonDecode(response.body);
+
+      setState(() {
+        liveData = responseData.map((item) {
+          return {
+            'title': item['title'] ?? 'Unknown',
+            'singer': item['singer'] ?? 'Unknown',
+            'thumbnailUrl': item['thumbnailUrl'] ?? 'assets/placeholder.jpg',
+          };
+        }).toList();
+      });
+    } else {
+      // 실패한 경우
+      print('Failed to load live data');
+    }
   }
 
   @override
@@ -133,9 +147,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
             ] else ...[
               Expanded(
                 child: ListView.builder(
-                  itemCount: savedSongs.length,
+                  itemCount: liveData.length,
                   itemBuilder: (context, index) {
-                    final song = savedSongs[index];
+                    final song = liveData[index];
                     return ListTile(
                       leading: Image.network(
                         song['thumbnailUrl'],

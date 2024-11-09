@@ -6,7 +6,12 @@ import 'home_screen.dart';
 import 'library_screen.dart';
 
 class AddSongUrlScreen extends StatefulWidget {
-  const AddSongUrlScreen({super.key});
+  const AddSongUrlScreen({
+    super.key, 
+    this.initialUrl,
+  });
+
+  final String? initialUrl;
 
   @override
   State<AddSongUrlScreen> createState() => _AddSongUrlScreenState();
@@ -14,6 +19,19 @@ class AddSongUrlScreen extends StatefulWidget {
 
 class _AddSongUrlScreenState extends State<AddSongUrlScreen> {
   final TextEditingController _urlController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // 초기 URL이 있으면 컨트롤러에 설정
+    if (widget.initialUrl != null && widget.initialUrl!.isNotEmpty) {
+      _urlController.text = widget.initialUrl!;
+      // URL이 설정되면 자동으로 다음 화면으로 이동
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _loadVideo();
+      });
+    }
+  }
 
     void _onNavItemTapped(int index) {
     if (index == 2) {
