@@ -161,7 +161,7 @@ class _AddSongDetailScreenState extends State<AddSongDetailScreen> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text('Add Song'),
+        // title: const Text('Add Song'),
       ),
       body: Column(
         children: [

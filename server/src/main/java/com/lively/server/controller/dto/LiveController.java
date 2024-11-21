@@ -2,7 +2,6 @@ package com.lively.server.controller.dto;
 
 import com.lively.server.domain.Live;
 import com.lively.server.service.LiveService;
-import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

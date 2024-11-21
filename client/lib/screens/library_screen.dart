@@ -14,27 +14,7 @@ class LibraryScreen extends StatefulWidget {
 class _LibraryScreenState extends State<LibraryScreen> {
   bool isPlaylistsSelected = false;
   List<Map<String, dynamic>> liveData = [];
-
-  final List<Map<String, String>> recentlyPlayed = [
-    {"title": "인디 플리", "tracks": "128 tracks", "imageUrl": "assets/placeholder.jpg"},
-    {"title": "킬링보이스 플리", "tracks": "33 tracks", "imageUrl": "assets/placeholder.jpg"},
-    {"title": "콘서트 라이브 플리", "tracks": "48 tracks", "imageUrl": "assets/placeholder.jpg"},
-    {"title": "비긴어게인 플리", "tracks": "10 tracks", "imageUrl": "assets/placeholder.jpg"},
-    {"title": "버스킹 플리", "tracks": "14 tracks", "imageUrl": "assets/placeholder.jpg"},
-    {"title": "유스케 플리", "tracks": "35 tracks", "imageUrl": "assets/placeholder.jpg"},
-    {"title": "인디 플리", "tracks": "128 tracks", "imageUrl": "assets/placeholder.jpg"},
-    {"title": "킬링보이스 플리", "tracks": "33 tracks", "imageUrl": "assets/placeholder.jpg"},
-    {"title": "콘서트 라이브 플리", "tracks": "48 tracks", "imageUrl": "assets/placeholder.jpg"},
-    {"title": "비긴어게인 플리", "tracks": "10 tracks", "imageUrl": "assets/placeholder.jpg"},
-    {"title": "버스킹 플리", "tracks": "14 tracks", "imageUrl": "assets/placeholder.jpg"},
-    {"title": "유스케 플리", "tracks": "35 tracks", "imageUrl": "assets/placeholder.jpg"},
-    {"title": "인디 플리", "tracks": "128 tracks", "imageUrl": "assets/placeholder.jpg"},
-    {"title": "킬링보이스 플리", "tracks": "33 tracks", "imageUrl": "assets/placeholder.jpg"},
-    {"title": "콘서트 라이브 플리", "tracks": "48 tracks", "imageUrl": "assets/placeholder.jpg"},
-    {"title": "비긴어게인 플리", "tracks": "10 tracks", "imageUrl": "assets/placeholder.jpg"},
-    {"title": "버스킹 플리", "tracks": "14 tracks", "imageUrl": "assets/placeholder.jpg"},
-    {"title": "유스케 플리", "tracks": "35 tracks", "imageUrl": "assets/placeholder.jpg"},
-  ];
+  List<Map<String, dynamic>> playlists = [];
 
   int _currentIndex = 2; // 라이브러리 탭이 기본 선택된 상태
 
@@ -42,6 +22,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
   void initState() {
     super.initState();
     _fetchLiveData(); // API 호출
+    _fetchPlaylists();
   }
 
   Future<void> _fetchLiveData() async {
@@ -66,6 +47,35 @@ class _LibraryScreenState extends State<LibraryScreen> {
     }
   }
 
+  Future<void> _fetchPlaylists() async {
+    try {
+      final response = await http.get(Uri.parse('http://localhost:3000/playlist'));
+      
+      if (response.statusCode == 200) {
+        final List<dynamic> responseData = jsonDecode(response.body);
+        
+        setState(() {
+          playlists = responseData.map((item) {
+            // 플레이리스트의 lives 중 첫 번째 곡의 썸네일을 가져오기
+            final lives = item['lives'] as List<dynamic>?;
+            final thumbnailUrl = lives != null && lives.isNotEmpty 
+                ? lives[0]['thumbnailUrl'] 
+                : 'assets/placeholder.jpg';
+            
+            return {
+              'id': item['id'],
+              'title': item['title'],
+              'imageUrl': thumbnailUrl,  // 첫 번째 곡의 썸네일 사용
+              'tracks': '${lives?.length ?? 0} tracks'
+            };
+          }).toList();
+        });
+      }
+    } catch (e) {
+      print('Error fetching playlists: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -83,11 +93,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
             onPressed: () {},
           ),
           IconButton(
-            icon: CircleAvatar(
-              backgroundImage: AssetImage("assets/profile.jpg"),
+            icon: const CircleAvatar(
+              radius: 15,
+              backgroundImage: AssetImage('assets/profile.jpg'),
             ),
             onPressed: () {},
           ),
+          const SizedBox(width: 16),
         ],
       ),
       body: Padding(
@@ -118,31 +130,31 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 ],
               ),
               Expanded(
-                child: ListView.builder(
-                  itemCount: recentlyPlayed.length,
+                child:   ListView.builder(
+                  itemCount: playlists.length,
                   itemBuilder: (context, index) {
                     return ListTile(
-                      leading: Image.asset(
-                        recentlyPlayed[index]["imageUrl"]!,
+                      leading: Image.network(
+                        playlists[index]["imageUrl"]!,
                         width: 50,
                         height: 50,
                         fit: BoxFit.cover,
                       ),
                       title: Text(
-                        recentlyPlayed[index]["title"]!,
+                        playlists[index]["title"]!,
                         style: const TextStyle(color: Colors.white, fontSize: 16),
                       ),
                       subtitle: Text(
-                        recentlyPlayed[index]["tracks"]!,
+                        playlists[index]["tracks"]!,
                         style: const TextStyle(color: Colors.white),
                       ),
                       trailing: const Icon(Icons.play_arrow, color: Colors.white),
                       onTap: () {
-                        // 재생 기능 추가 가능
+                        // 플레이리스트 내부의 곡 목록을 보여주는 화면으로 이동
                       },
                     );
                   },
-                ),
+                )
               ),
             ] else ...[
               Expanded(

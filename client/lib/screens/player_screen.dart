@@ -40,7 +40,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   void _initializePlayer() {
     try {
-      print('Initializing player with Video ID: ${widget.videoId}'); // 디버깅용
       final controller = YoutubePlayerController(
         initialVideoId: widget.videoId,
         flags: YoutubePlayerFlags(

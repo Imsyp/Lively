@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
 import '../models/trending_item.dart';
 import 'library_screen.dart';
@@ -16,12 +17,13 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<Map<String, dynamic>> liveData = [];
   List<TrendingItem> trendingItems = [];
-  final String apiKey = 'AIzaSyBtSOEGxr8cTLvtAIT2KzH_1K9Ws2mN_DQ'; // YouTube Data API 키를 입력하세요
+  late final String apiKey;
   int _selectedIndex = 0;
 
   @override
   void initState() {
     super.initState();
+    apiKey = dotenv.env['YOUTUBE_API_KEY'] ?? '';
     _fetchLiveData();
     _fetchTrendingVideos();
   }
@@ -200,20 +202,39 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               SizedBox(height: 16),
-              if (liveData.isNotEmpty) ...[
-                SizedBox(
-                  height: 162,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: liveData.length,
-                    itemBuilder: (context, index) {
-                      final song = liveData[index];
-                      return _buildSavedSongItem(song);
-                    },
-                  ),
-                ),
-              ],
+              SizedBox(
+                height: 162,
+                child: liveData.isNotEmpty
+                    ? ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: liveData.length,
+                        itemBuilder: (context, index) {
+                          final song = liveData[index];
+                          return _buildSavedSongItem(song);
+                        },
+                      )
+                    : Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.music_note,
+                              size: 48,
+                              color: Colors.grey[700],
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'No lives yet',
+                              style: TextStyle(
+                                color: Colors.grey[700],
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+              ),
               SizedBox(height: 23),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),

@@ -105,20 +105,23 @@ class _AddSongUrlScreenState extends State<AddSongUrlScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        title: const Text('Add Song'),
-        leading: IconButton(
-          icon: const Icon(Icons.history),
-          onPressed: () {},
-        ),
+        backgroundColor: Colors.black,
+        elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.search),
+            icon: const Icon(Icons.history, color: Colors.white),
             onPressed: () {},
           ),
-          const CircleAvatar(
-            radius: 15,
-            backgroundImage: AssetImage('assets/profile.jpg'),
+          IconButton(
+            icon: const Icon(Icons.search, color: Colors.white),
+            onPressed: () {},
+          ),
+          IconButton(
+            icon: const CircleAvatar(
+              radius: 15,
+              backgroundImage: AssetImage('assets/profile.jpg'),
+            ),
+            onPressed: () {},
           ),
           const SizedBox(width: 16),
         ],
