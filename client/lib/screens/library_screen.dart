@@ -26,12 +26,19 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   Future<void> _fetchLiveData() async {
-    final response = await http.get(Uri.parse('http://localhost:3000/live'));
+    final response = await http.get(
+      Uri.parse('http://localhost:3000/live'),
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json; charset=utf-8',
+      },
+    );
 
     if (response.statusCode == 200) {
+      
       // 성공적으로 데이터를 가져왔을 때
-      final List<dynamic> responseData = jsonDecode(response.body);
-
+      final decodedBody = utf8.decode(response.bodyBytes);
+      final List<dynamic> responseData = jsonDecode(decodedBody);
       setState(() {
         liveData = responseData.map((item) {
           return {
@@ -49,10 +56,18 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   Future<void> _fetchPlaylists() async {
     try {
-      final response = await http.get(Uri.parse('http://localhost:3000/playlist'));
+      final response = await http.get(
+        Uri.parse('http://localhost:3000/playlist'),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+      );
       
       if (response.statusCode == 200) {
-        final List<dynamic> responseData = jsonDecode(response.body);
+        // UTF-8로 디코딩
+        final decodedBody = utf8.decode(response.bodyBytes);
+        final List<dynamic> responseData = jsonDecode(decodedBody);
         
         setState(() {
           playlists = responseData.map((item) {
@@ -116,19 +131,19 @@ class _LibraryScreenState extends State<LibraryScreen> {
             ),
             const SizedBox(height: 16),
             if (isPlaylistsSelected) ...[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "Recently Played",
-                    style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-                    onPressed: () {},
-                  ),
-                ],
-              ),
+              // Row(
+              //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              //   children: [
+              //     const Text(
+              //       "Recently Played",
+              //       style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+              //     ),
+              //     IconButton(
+              //       icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+              //       onPressed: () {},
+              //     ),
+              //   ],
+              // ),
               Expanded(
                 child:   ListView.builder(
                   itemCount: playlists.length,

@@ -1,12 +1,14 @@
-package com.lively.server.controller.dto;
+package com.lively.server.controller;
 
 import com.lively.server.domain.Live;
 import com.lively.server.service.LiveService;
+import org.bson.types.ObjectId;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/live")
@@ -25,11 +27,12 @@ public class LiveController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Live> getLive(@PathVariable Long id) {
-        Live live = liveService.getLive(id);
-        if(live != null) {
-            return ResponseEntity.ok(live);
-        } else {
+    public ResponseEntity<Live> getLive(@PathVariable("id") String id) {
+        ObjectId objectId = new ObjectId(id);
+        Optional<Live> live = liveService.getLive(objectId);
+        if (live.isPresent()) {  // 값이 존재하면
+            return ResponseEntity.ok(live.get());
+        } else {  // 값이 없으면
             return ResponseEntity.notFound().build();
         }
     }
@@ -40,7 +43,8 @@ public class LiveController {
     }
 
     @DeleteMapping("/{id}")
-    public void deleteLive(@PathVariable Long id) {
-        liveService.deleteLive(id);
+    public void deleteLive(@PathVariable("id") String id) {
+        ObjectId objectId = new ObjectId(id);
+        liveService.deleteLive(objectId);
     }
 }

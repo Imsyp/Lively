@@ -2,9 +2,11 @@ package com.lively.server.service;
 
 import com.lively.server.domain.Live;
 import com.lively.server.repository.LiveRepository;
+import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class LiveService {
@@ -19,8 +21,8 @@ public class LiveService {
         liveRepository.save(live);
     }
 
-    public Live getLive(Long id) {
-        return liveRepository.findLiveById(id);
+    public Optional<Live> getLive(ObjectId id) {
+        return liveRepository.findById(id);
     }
 
 
@@ -28,7 +30,7 @@ public class LiveService {
         return liveRepository.findAll();
     }
 
-    public void deleteLive(Long id) {
+    public void deleteLive(ObjectId id) {
         liveRepository.deleteById(id);
     }
 }

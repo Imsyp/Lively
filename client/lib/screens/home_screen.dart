@@ -28,13 +28,20 @@ class _HomeScreenState extends State<HomeScreen> {
     _fetchTrendingVideos();
   }
 
+  // 'Your Own Lives' 탭 아래에 삽입할 live 목록 fetch
   Future<void> _fetchLiveData() async {
     try {
-      final response = await http.get(Uri.parse('http://localhost:3000/live'));
-      print('API Response: ${response.body}');
+      final response = await http.get(
+        Uri.parse('http://localhost:3000/live'),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+      );
 
       if (response.statusCode == 200) {
-        final List<dynamic> responseData = jsonDecode(response.body);
+        final decodedBody = utf8.decode(response.bodyBytes);
+        final List<dynamic> responseData = jsonDecode(decodedBody);
 
         setState(() {
           liveData = responseData.map((item) {
@@ -59,6 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // 'Trending on This Week' 탭 아래에 삽입할 TredingVideos 목록 fetch
   Future<void> _fetchTrendingVideos() async {
     try {
       final response = await http.get(
@@ -104,6 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // viewCount 단위 변환
   String _formatViewCount(String viewCount) {
     final count = int.parse(viewCount);
     if (count > 1000000) {
@@ -114,6 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return '$count views';
   }
 
+  // Navigation을 통한 화면 이동
   void _onNavItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -146,6 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // 전체 화면 빌드
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -287,6 +298,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // fetch한 TrendingItems 기반으로 terdingItem tab 화면 구성
   Widget _buildTrendingItem(TrendingItem item) {
     return Container(
       decoration: BoxDecoration(
@@ -369,6 +381,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // 
   Widget _buildSavedSongItem(Map<String, dynamic> song) {
     return GestureDetector(
       onTap: () {

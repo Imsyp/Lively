@@ -1,4 +1,3 @@
-// lib/models/live_item.dart
 class LiveItem {
   final String title;
   final String artist;
@@ -9,4 +8,11 @@ class LiveItem {
     required this.artist,
     this.imageUrl = 'assets/placeholder.jpg',
   });
+
+  factory LiveItem.fromJson(Map<String, dynamic> json) {
+    return LiveItem(
+      title: json['title'],
+      artist: json['singer'] // 한글 처리
+    );
+  }
 }

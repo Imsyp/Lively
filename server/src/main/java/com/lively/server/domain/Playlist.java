@@ -1,30 +1,24 @@
 package com.lively.server.domain;
 
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.ArrayList;
 import java.util.List;
 
-@Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Document(collection = "Playlist")
 public class Playlist {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+    private String id;
     private String title;
     private String imageUrl;
 
-    @ManyToMany
-    @JoinTable(
-            name = "playlist_live",
-            joinColumns = @JoinColumn(name = "playlist_id"),
-            inverseJoinColumns = @JoinColumn(name = "live_id")
-    )
-    private List<Live> lives = new ArrayList<>();
+    @DBRef  // 다른 컬렉션의 Live 문서를 참조
+    private List<Live> lives;
 }
