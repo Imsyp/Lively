@@ -3,6 +3,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'home_screen.dart';
 import 'add_song_url.dart';
+import 'create_playlist_screen.dart';
+import 'playlist_detail_screen.dart';
+import '../material/mini_player.dart';
 
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
@@ -15,9 +18,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
   bool isPlaylistsSelected = false;
   List<Map<String, dynamic>> liveData = [];
   List<Map<String, dynamic>> playlists = [];
-
-  int _currentIndex = 2; // 라이브러리 탭이 기본 선택된 상태
-
+  int _selectedIndex = 2;
+  
   @override
   void initState() {
     super.initState();
@@ -75,7 +77,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
             final lives = item['lives'] as List<dynamic>?;
             final thumbnailUrl = lives != null && lives.isNotEmpty 
                 ? lives[0]['thumbnailUrl'] 
-                : 'assets/placeholder.jpg';
+                : 'https://img.youtube.com/vi/JaeQtCPr6AI/0.jpg';
             
             return {
               'id': item['id'],
@@ -88,6 +90,39 @@ class _LibraryScreenState extends State<LibraryScreen> {
       }
     } catch (e) {
       print('Error fetching playlists: $e');
+    }
+  }
+
+  // Navigation을 통한 화면 이동
+  void _onNavItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    
+    if (index == 2) {
+      Navigator.pushReplacement(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) => const LibraryScreen(),
+          transitionDuration: Duration.zero,
+        ),
+      );
+    } else if (index == 0) {
+      Navigator.pushReplacement(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) => const HomeScreen(),
+          transitionDuration: Duration.zero,
+        ),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) => const AddSongUrlScreen(),
+          transitionDuration: Duration.zero,
+        ),
+      );
     }
   }
 
@@ -131,45 +166,91 @@ class _LibraryScreenState extends State<LibraryScreen> {
             ),
             const SizedBox(height: 16),
             if (isPlaylistsSelected) ...[
-              // Row(
-              //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              //   children: [
-              //     const Text(
-              //       "Recently Played",
-              //       style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-              //     ),
-              //     IconButton(
-              //       icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-              //       onPressed: () {},
-              //     ),
-              //   ],
-              // ),
               Expanded(
-                child:   ListView.builder(
-                  itemCount: playlists.length,
-                  itemBuilder: (context, index) {
-                    return ListTile(
-                      leading: Image.network(
-                        playlists[index]["imageUrl"]!,
-                        width: 50,
-                        height: 50,
-                        fit: BoxFit.cover,
-                      ),
-                      title: Text(
-                        playlists[index]["title"]!,
-                        style: const TextStyle(color: Colors.white, fontSize: 16),
-                      ),
-                      subtitle: Text(
-                        playlists[index]["tracks"]!,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      trailing: const Icon(Icons.play_arrow, color: Colors.white),
-                      onTap: () {
-                        // 플레이리스트 내부의 곡 목록을 보여주는 화면으로 이동
+                child: Stack(
+                  children: [
+                    ListView.builder(
+                      itemCount: playlists.length,
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          leading: Image.network(
+                            playlists[index]["imageUrl"]!,
+                            width: 50,
+                            height: 50,
+                            fit: BoxFit.cover,
+                          ),
+                          title: Text(
+                            playlists[index]["title"]!,
+                            style: const TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                          subtitle: Text(
+                            playlists[index]["tracks"]!,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          trailing: const Icon(Icons.play_arrow, color: Colors.white),
+                          onTap: () {
+                            // PlaylistDetailScreen으로 이동
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PlaylistDetailScreen(
+                                  playlistId: playlists[index]["id"]!,
+                                  playlistTitle: playlists[index]["title"]!,
+                                ),
+                              ),
+                            );
+                          },
+                        );
                       },
-                    );
-                  },
-                )
+                    ),
+                    Positioned(
+                      right: 16,
+                      bottom: 16,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(24),
+                            onTap: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const CreatePlaylistScreen(),
+                                ),
+                              );
+                              
+                              if (result == true) {
+                                _fetchPlaylists(); // 새로운 플레이리스트 생성 후 목록 새로고침
+                              }
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  Icon(Icons.add, color: Colors.black),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'New',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ] else ...[
               Expanded(
@@ -208,53 +289,32 @@ class _LibraryScreenState extends State<LibraryScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.grey[900], // 배경 색상을 어두운 색으로
-        currentIndex: _currentIndex,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle_outlined),
-            label: 'Add Song',
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const MiniPlayer(),
+          BottomNavigationBar(
+            backgroundColor: Colors.grey[900],
+            selectedItemColor: Colors.white,
+            unselectedItemColor: Colors.grey,
+            currentIndex: 1,
+            onTap: _onNavItemTapped,
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home, color: Colors.white), // 흰색 아이콘
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.add_circle_outlined),
+                label: 'Add Song',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.library_music, color: Colors.white), // 흰색 아이콘
+                label: 'Library',
+              ),
+            ],
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.library_music), label: "Library"),
         ],
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.white60, // 선택되지 않은 항목의 색상
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-
-          if (index == 2) {
-            // Library를 선택했을 때 애니메이션 없이 이동
-            Navigator.pushReplacement(
-              context,
-              PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) => const LibraryScreen(),
-                transitionDuration: Duration.zero, // 애니메이션 없이 전환
-              ),
-            );
-          } else if (index == 0) {
-            // Home을 선택했을 때 애니메이션 없이 이동
-            Navigator.pushReplacement(
-              context,
-              PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) => const HomeScreen(),
-                transitionDuration: Duration.zero, // 애니메이션 없이 전환
-              ),
-            );
-          } else {
-            // Explore 화면으로 전환
-            Navigator.pushReplacement(
-              context,
-              PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) => const AddSongUrlScreen(),
-                transitionDuration: Duration.zero, // 애니메이션 없이 전환
-              ),
-            );
-          }
-        },
       ),
     );
   }

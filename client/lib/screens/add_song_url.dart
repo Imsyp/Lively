@@ -4,6 +4,7 @@ import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'add_song_detail.dart';
 import 'home_screen.dart';
 import 'library_screen.dart';
+import '../material/mini_player.dart';
 
 class AddSongUrlScreen extends StatefulWidget {
   const AddSongUrlScreen({
@@ -172,27 +173,33 @@ class _AddSongUrlScreenState extends State<AddSongUrlScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.grey[900],
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.grey,
-        currentIndex: 1,
-        onTap: _onNavItemTapped,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home, color: Colors.white), // 흰색 아이콘
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle_outlined),
-            label: 'Add Song',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.library_music, color: Colors.white), // 흰색 아이콘
-            label: 'Library',
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const MiniPlayer(),
+          BottomNavigationBar(
+            backgroundColor: Colors.grey[900],
+            selectedItemColor: Colors.white,
+            unselectedItemColor: Colors.grey,
+            currentIndex: 1,
+            onTap: _onNavItemTapped,
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home, color: Colors.white), // 흰색 아이콘
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.add_circle_outlined),
+                label: 'Add Song',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.library_music, color: Colors.white), // 흰색 아이콘
+                label: 'Library',
+              ),
+            ],
           ),
         ],
-      ),
+      )
     );
   }
 }

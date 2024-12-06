@@ -6,6 +6,7 @@ import '../models/trending_item.dart';
 import 'library_screen.dart';
 import 'add_song_url.dart';
 import 'player_screen.dart';
+import '../material/mini_player.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -274,27 +275,33 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.grey[900],
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.grey,
-        currentIndex: _selectedIndex,
-        onTap: _onNavItemTapped,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home, color: Colors.white),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle_outlined),
-            label: 'Add Song',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.library_music, color: Colors.white),
-            label: 'Library',
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const MiniPlayer(),
+          BottomNavigationBar(
+            backgroundColor: Colors.grey[900],
+            selectedItemColor: Colors.white,
+            unselectedItemColor: Colors.grey,
+            currentIndex: 1,
+            onTap: _onNavItemTapped,
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home, color: Colors.white), // 흰색 아이콘
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.add_circle_outlined),
+                label: 'Add Song',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.library_music, color: Colors.white), // 흰색 아이콘
+                label: 'Library',
+              ),
+            ],
           ),
         ],
-      ),
+      )
     );
   }
 
