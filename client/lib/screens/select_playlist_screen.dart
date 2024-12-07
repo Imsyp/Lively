@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../config/env.dart';
 
 class SelectPlaylistScreen extends StatefulWidget {
   final String liveId;
@@ -25,9 +26,11 @@ class _SelectPlaylistScreenState extends State<SelectPlaylistScreen> {
   }
 
   Future<void> _fetchPlaylists() async {
+    final host = EnvConfig.instance.host;
+    final port = EnvConfig.instance.port;
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:3000/playlist'),
+        Uri.parse('http://$host:$port/playlist'),
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json; charset=utf-8',
@@ -62,9 +65,11 @@ class _SelectPlaylistScreenState extends State<SelectPlaylistScreen> {
   }
 
   Future<void> _addToPlaylist(String playlistId) async {
+    final host = EnvConfig.instance.host;
+    final port = EnvConfig.instance.port;
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:3000/playlist/$playlistId/${widget.liveId}'),
+        Uri.parse('http://$host:$port/playlist/$playlistId/${widget.liveId}'),
         headers: {
           'Content-Type': 'application/json',
         },

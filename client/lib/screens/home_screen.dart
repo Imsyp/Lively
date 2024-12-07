@@ -7,6 +7,7 @@ import 'library_screen.dart';
 import 'add_song_url.dart';
 import 'player_screen.dart';
 import '../material/mini_player.dart';
+import '../config/env.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,21 +20,27 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Map<String, dynamic>> liveData = [];
   List<TrendingItem> trendingItems = [];
   late final String apiKey;
+  late final String host;
+  late final String port;
   int _selectedIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    apiKey = dotenv.env['YOUTUBE_API_KEY'] ?? '';
+    apiKey = EnvConfig.instance.apiKey ?? '';
+    host = EnvConfig.instance.host;
+    port = EnvConfig.instance.port;
     _fetchLiveData();
     _fetchTrendingVideos();
   }
 
   // 'Your Own Lives' 탭 아래에 삽입할 live 목록 fetch
   Future<void> _fetchLiveData() async {
+
     try {
+
       final response = await http.get(
-        Uri.parse('http://localhost:3000/live'),
+        Uri.parse('http://$host:$port/live'),
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json; charset=utf-8',

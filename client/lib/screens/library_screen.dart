@@ -6,6 +6,7 @@ import 'add_song_url.dart';
 import 'create_playlist_screen.dart';
 import 'playlist_detail_screen.dart';
 import '../material/mini_player.dart';
+import '../config/env.dart';
 
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
@@ -28,8 +29,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   Future<void> _fetchLiveData() async {
+    final host = EnvConfig.instance.host;
+    final port = EnvConfig.instance.port;
     final response = await http.get(
-      Uri.parse('http://localhost:3000/live'),
+      Uri.parse('http://$host:$port/live'),
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json; charset=utf-8',
@@ -57,9 +60,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   Future<void> _fetchPlaylists() async {
+    final host = EnvConfig.instance.host;
+    final port = EnvConfig.instance.port;
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:3000/playlist'),
+        Uri.parse('http://$host:$port/playlist'),
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json; charset=utf-8',

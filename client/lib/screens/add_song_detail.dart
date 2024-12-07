@@ -6,6 +6,7 @@ import 'home_screen.dart';
 import 'library_screen.dart';
 import 'add_song_url.dart';
 import '../material/mini_player.dart';
+import '../config/env.dart';
 
 class AddSongDetailScreen extends StatefulWidget {
   final String videoId;
@@ -105,8 +106,11 @@ class _AddSongDetailScreenState extends State<AddSongDetailScreen> {
         ),
       };
 
+      final host = EnvConfig.instance.host;
+      final port = EnvConfig.instance.port;
+
       final response = await http.post(
-        Uri.parse('http://localhost:3000/live/add'),  // 서버 주소
+        Uri.parse('http://$host:$port/live/add'),  // 서버 주소
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(clip),
       );

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../material/mini_player.dart';
+import '../config/env.dart';
 
 class CreatePlaylistScreen extends StatefulWidget {
   const CreatePlaylistScreen({super.key});
@@ -15,9 +15,12 @@ class _CreatePlaylistScreenState extends State<CreatePlaylistScreen> {
   final _imageUrlController = TextEditingController();
 
   Future<void> _createPlaylist() async {
+    final host = EnvConfig.instance.host;
+    final port = EnvConfig.instance.port; 
     try {
+
       final response = await http.post(
-        Uri.parse('http://localhost:3000/playlist/add'),
+        Uri.parse('http://$host:$port/playlist/add'),
         headers: {
           'Content-Type': 'application/json',
         },
